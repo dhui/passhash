@@ -1,0 +1,95 @@
+package passhash
+
+import (
+	"bytes"
+	"fmt"
+	"strconv"
+	"strings"
+)
+
+const (
+	storeCredentialFormat string = "%d %s %x %x" // Using space as a separator for Sscanf compatibility
+)
+
+// StringCredentialStore is an example CredentialStore that stores the Credential as a string
+type StringCredentialStore struct {
+	StoredCredential string
+}
+
+func (store *StringCredentialStore) Store(credential *Credential) error {
+	cfParams, _ := credential.WorkFactor.Marshal()
+	cfStrParams := make([]string, 0, len(cfParams))
+	for _, param := range cfParams {
+		cfStrParams = append(cfStrParams, strconv.Itoa(param))
+	}
+	cfStore := strings.Join(cfStrParams, ",")
+	store.StoredCredential = fmt.Sprintf(storeCredentialFormat, credential.Kdf, cfStore, string(credential.Salt), string(credential.Hash))
+	return nil
+}
+
+func (store *StringCredentialStore) Load() (*Credential, error) {
+	credential := Credential{}
+
+	var cfStore string
+	fmt.Sscanf(store.StoredCredential, storeCredentialFormat, &credential.Kdf, &cfStore, &credential.Salt, &credential.Hash)
+
+	cfStrParams := strings.Split(cfStore, ",")
+	cfParams := make([]int, 0, len(cfStrParams))
+	for _, paramStr := range cfStrParams {
+		i, err := strconv.Atoi(paramStr)
+		if err != nil {
+			return nil, err
+		}
+		cfParams = append(cfParams, i)
+	}
+
+	wf, err := NewWorkFactorForKdf(credential.Kdf)
+	if err != nil {
+		return nil, err
+	}
+	wf.Unmarshal(cfParams)
+	credential.WorkFactor = wf
+
+	return &credential, nil
+}
+
+func ExampleCredentialStore() {
+	userID := UserID(0)
+	password := "insecurepassword"
+	origCredential, err := NewCredential(userID, password)
+	if err != nil {
+		fmt.Println("Error creating credential.", err)
+		return
+	}
+
+	store := StringCredentialStore{}
+	store.Store(origCredential)
+	newCredential, err := store.Load()
+	if err != nil {
+		fmt.Println("Error loading credential.", err)
+		return
+	}
+
+	credentialEqual := newCredential == origCredential
+	kdfEqual := newCredential.Kdf == origCredential.Kdf
+	cfEqual := newCredential.WorkFactor == origCredential.WorkFactor // Not equal due to pointer comparison
+	saltEqual := bytes.Compare(newCredential.Salt, origCredential.Salt) == 0
+	hashEqual := bytes.Compare(newCredential.Hash, origCredential.Hash) == 0
+	matched, updated := newCredential.MatchesPassword(password)
+	fmt.Println("credentialEqual:", credentialEqual)
+	fmt.Println("kdfEqual:", kdfEqual)
+	fmt.Println("cfEqual:", cfEqual)
+	fmt.Println("saltEqual:", saltEqual)
+	fmt.Println("hashEqual:", hashEqual)
+	fmt.Println("newCredential.MatchesPassword (matched):", matched)
+	fmt.Println("newCredential.MatchesPassword (updated):", updated)
+
+	// Output:
+	// credentialEqual: false
+	// kdfEqual: true
+	// cfEqual: false
+	// saltEqual: true
+	// hashEqual: true
+	// newCredential.MatchesPassword (matched): true
+	// newCredential.MatchesPassword (updated): false
+}
