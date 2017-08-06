@@ -7,8 +7,8 @@ import (
 
 func TestPasswordPoliciesNotMetDuplicateErrors(t *testing.T) {
 	err := PasswordPoliciesNotMet{UnMetPasswordPolicies: []PasswordPolicyError{
-		PasswordPolicyError{AtLeastNRunes{}, errors.New("Dummy error 1")},
-		PasswordPolicyError{AtLeastNRunes{}, errors.New("Dummy error 2")},
+		{AtLeastNRunes{}, errors.New("Dummy error 1")},
+		{AtLeastNRunes{}, errors.New("Dummy error 2")},
 	}}
 	expectedError := "Password policies not met due to: Dummy error 1, Dummy error 2"
 	if err.Error() != expectedError {
