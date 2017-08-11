@@ -27,7 +27,7 @@ func (store *StringCredentialStore) Store(credential *Credential) error {
 	return nil
 }
 
-func (store *StringCredentialStore) Load() (*Credential, error) {
+func (store *StringCredentialStore) Load(UserID) (*Credential, error) {
 	credential := Credential{}
 
 	var cfStore string
@@ -64,7 +64,7 @@ func ExampleCredentialStore() {
 
 	store := StringCredentialStore{}
 	store.Store(origCredential)
-	newCredential, err := store.Load()
+	newCredential, err := store.Load(userID)
 	if err != nil {
 		fmt.Println("Error loading credential.", err)
 		return

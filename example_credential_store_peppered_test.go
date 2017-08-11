@@ -75,8 +75,8 @@ func (store *StringCredentialPepperedStore) Store(credential *Credential) error 
 	return store.StringCredentialStore.Store(credential)
 }
 
-func (store *StringCredentialPepperedStore) Load() (*Credential, error) {
-	credential, err := store.StringCredentialStore.Load()
+func (store *StringCredentialPepperedStore) Load(id UserID) (*Credential, error) {
+	credential, err := store.StringCredentialStore.Load(id)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func ExampleCredentialStore_peppered() {
 
 	store := StringCredentialPepperedStore{}
 	store.Store(origCredential)
-	newCredential, err := store.Load()
+	newCredential, err := store.Load(userID)
 	if err != nil {
 		fmt.Println("Error loading credential.", err)
 		return
