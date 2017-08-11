@@ -66,7 +66,7 @@ var DefaultConfig = Config{
 	SaltSize:    16,
 	KeyLength:   32,
 	AuditLogger: &DummyAuditLogger{},    // It is recommended that you replace the dummy AuditLogger to actually audit your credentials
-	Store:       DummyCredentialStore{}, // It is recommended that you rpelace the dummy CredentialStore to actually store credentials
+	Store:       DummyCredentialStore{}, // It is recommended that you replace the dummy CredentialStore to actually store credentials
 	PasswordPolicies: []PasswordPolicy{
 		AtLeastNRunes{N: 10},
 	},
