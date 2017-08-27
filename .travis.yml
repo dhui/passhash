@@ -19,6 +19,7 @@ matrix:
   - go: 1.6.x
   - go: 1.7.x
   - go: 1.8.x
+  - go: 1.9.x
   - go: master
 
 before_install:
