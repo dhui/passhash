@@ -2,6 +2,7 @@ package passhash
 
 import (
 	"bytes"
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -75,6 +76,10 @@ func (store *StringCredentialPepperedStore) Store(credential *Credential) error 
 	return store.StringCredentialStore.Store(credential)
 }
 
+func (store *StringCredentialPepperedStore) StoreContext(ctx context.Context, credential *Credential) error {
+	return store.Store(credential)
+}
+
 func (store *StringCredentialPepperedStore) Load(id UserID) (*Credential, error) {
 	credential, err := store.StringCredentialStore.Load(id)
 	if err != nil {
@@ -87,6 +92,10 @@ func (store *StringCredentialPepperedStore) Load(id UserID) (*Credential, error)
 		return nil, fmt.Errorf("Unsupported PepperID %v", store.PepperID)
 	}
 	return credential, nil
+}
+
+func (store *StringCredentialPepperedStore) LoadContext(id UserID) (*Credential, error) {
+	return store.Load(id)
 }
 
 func ExampleCredentialStore_peppered() {

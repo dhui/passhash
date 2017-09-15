@@ -2,6 +2,7 @@ package passhash
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -25,6 +26,10 @@ func (store *StringCredentialStore) Store(credential *Credential) error {
 	cfStore := strings.Join(cfStrParams, ",")
 	store.StoredCredential = fmt.Sprintf(storeCredentialFormat, credential.Kdf, cfStore, string(credential.Salt), string(credential.Hash))
 	return nil
+}
+
+func (store *StringCredentialStore) StoreContext(ctx context.Context, credential *Credential) error {
+	return store.Store(credential)
 }
 
 func (store *StringCredentialStore) Load(UserID) (*Credential, error) {
@@ -51,6 +56,10 @@ func (store *StringCredentialStore) Load(UserID) (*Credential, error) {
 	credential.WorkFactor = wf
 
 	return &credential, nil
+}
+
+func (store *StringCredentialStore) LoadContext(ctx context.Context, userID UserID) (*Credential, error) {
+	return store.Load(userID)
 }
 
 func ExampleCredentialStore() {
