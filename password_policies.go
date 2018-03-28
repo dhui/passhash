@@ -3,36 +3,12 @@ package passhash
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"unicode/utf8"
 )
 
 // PasswordPolicy is an interface used to determine if a password is acceptable. e.g. meets the given policy
 type PasswordPolicy interface {
 	PasswordAcceptable(string) error
-}
-
-// PasswordPolicyError satisfies the error interface and describes the reason for a PasswordPolicy check failure
-type PasswordPolicyError struct {
-	PasswordPolicy PasswordPolicy
-	Err            error
-}
-
-func (e PasswordPolicyError) Error() string {
-	return e.Err.Error()
-}
-
-// PasswordPoliciesNotMet satisfies the error interface and tracks the unmet password policies
-type PasswordPoliciesNotMet struct {
-	UnMetPasswordPolicies []PasswordPolicyError
-}
-
-func (e PasswordPoliciesNotMet) Error() string {
-	errorStrs := make([]string, 0, len(e.UnMetPasswordPolicies))
-	for _, ppe := range e.UnMetPasswordPolicies {
-		errorStrs = append(errorStrs, ppe.Error())
-	}
-	return fmt.Sprintf("Password policies not met due to: %s", strings.Join(errorStrs, ", "))
 }
 
 // AtLeastNRunes is a PasswordPolicy that ensures that the password is at least N runes in length
