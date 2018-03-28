@@ -323,6 +323,18 @@ func TestChangePassword(t *testing.T) {
 	}
 }
 
+func TestChangePasswordSamePassword(t *testing.T) {
+	userID := UserID(0)
+	password := "insecurepassword"
+	credential, err := NewCredential(userID, password)
+	if err != nil {
+		t.Error("Unable to create new Credential")
+	}
+	if err := credential.ChangePassword(password, password); err == nil {
+		t.Error("Changed password to the same password")
+	}
+}
+
 func TestChangePasswordNewPasswordDoesNotMeetPasswordPolicy(t *testing.T) {
 	userID := UserID(0)
 	password := "insecurepassword"
