@@ -101,7 +101,7 @@ func Example() {
 		// store.Marshal(credential)
 	}
 	newPassword := "newinsecurepassword"
-	if err = credential.Reset(password, newPassword); err != nil {
+	if err = credential.ChangePassword(password, newPassword); err != nil {
 		// Handle PasswordPoliciesNotMet error
 	}
 }

@@ -97,23 +97,23 @@ func (c *Credential) MatchesPasswordWithConfigAndIP(config Config, password stri
 	return
 }
 
-// Reset resets the password for the given Credential and updates the Credential to use the recommended safe key derivation function and parameters
-func (c *Credential) Reset(oldPassword, newPassword string) error {
-	return c.ResetWithConfig(DefaultConfig, oldPassword, newPassword)
+// ChangePassword changes the password for the given Credential and updates the Credential to use the recommended safe key derivation function and parameters
+func (c *Credential) ChangePassword(oldPassword, newPassword string) error {
+	return c.ChangePasswordWithConfig(DefaultConfig, oldPassword, newPassword)
 }
 
-// ResetWithIP resets the password for the given Credential and updates the Credential to use the recommended safe key derivation function and parameters
-func (c *Credential) ResetWithIP(oldPassword, newPassword string, ip net.IP) error {
-	return c.ResetWithConfigAndIP(DefaultConfig, oldPassword, newPassword, ip)
+// ChangePasswordWithIP changes the password for the given Credential and updates the Credential to use the recommended safe key derivation function and parameters
+func (c *Credential) ChangePasswordWithIP(oldPassword, newPassword string, ip net.IP) error {
+	return c.ChangePasswordWithConfigAndIP(DefaultConfig, oldPassword, newPassword, ip)
 }
 
-// ResetWithConfig resets the password for the given Credential and updates the Credential to meet the Config parameters if necessary
-func (c *Credential) ResetWithConfig(config Config, oldPassword, newPassword string) error {
-	return c.ResetWithConfigAndIP(config, oldPassword, newPassword, emptyIP)
+// ChangePasswordWithConfig changes the password for the given Credential and updates the Credential to meet the Config parameters if necessary
+func (c *Credential) ChangePasswordWithConfig(config Config, oldPassword, newPassword string) error {
+	return c.ChangePasswordWithConfigAndIP(config, oldPassword, newPassword, emptyIP)
 }
 
-// ResetWithConfigAndIP resets the password for the given Credential and updates the Credential to meet the Config parameters if necessary
-func (c *Credential) ResetWithConfigAndIP(config Config, oldPassword, newPassword string, ip net.IP) error {
+// ChangePasswordWithConfigAndIP changes the password for the given Credential and updates the Credential to meet the Config parameters if necessary
+func (c *Credential) ChangePasswordWithConfigAndIP(config Config, oldPassword, newPassword string, ip net.IP) error {
 	if !c.matchPassword(oldPassword, config.AuditLogger, ip) {
 		return fmt.Errorf("Old password does not match existing password")
 	}
