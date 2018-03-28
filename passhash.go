@@ -2,6 +2,7 @@ package passhash
 
 import (
 	"crypto"
+	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/pbkdf2"
@@ -91,16 +92,16 @@ func getPasswordHash(kdf Kdf, workFactor WorkFactor, salt []byte, keyLength int,
 		case Pbkdf2Sha3_512:
 			return pbkdf2.Key([]byte(password), salt, wf.Iter, keyLength, sha3.New512), nil
 		default:
-			return []byte{}, fmt.Errorf("Pbkdf2WorkFactor can only be specified with the Pbkdf2 Kdf")
+			return []byte{}, errors.New("Pbkdf2WorkFactor can only be specified with the Pbkdf2 Kdf")
 		}
 	case *BcryptWorkFactor:
 		if kdf != Bcrypt {
-			return []byte{}, fmt.Errorf("BcryptWorkFactor can only be specified with the Bcrypt Kdf")
+			return []byte{}, errors.New("BcryptWorkFactor can only be specified with the Bcrypt Kdf")
 		}
 		return bcrypt.GenerateFromPassword([]byte(password), wf.Cost)
 	case *ScryptWorkFactor:
 		if kdf != Scrypt {
-			return []byte{}, fmt.Errorf("ScryptWorkFactor can only be specified with the Scrypt Kdf")
+			return []byte{}, errors.New("ScryptWorkFactor can only be specified with the Scrypt Kdf")
 		}
 		return scrypt.Key([]byte(password), salt, wf.N, wf.R, wf.P, keyLength)
 	default:

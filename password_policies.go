@@ -1,6 +1,7 @@
 package passhash
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"unicode/utf8"
@@ -56,7 +57,7 @@ type NotCommonPasswordNaive struct {
 // PasswordAcceptable accepts passwords that are not common passwords
 func (pp NotCommonPasswordNaive) PasswordAcceptable(password string) error {
 	if pp.CommonPasswords[password] {
-		return fmt.Errorf("Password is a common password")
+		return errors.New("Password is a common password")
 	}
 	return nil
 }

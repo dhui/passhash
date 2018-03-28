@@ -2,7 +2,7 @@ package passhash
 
 import (
 	"crypto/subtle"
-	"fmt"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"net"
 )
@@ -115,7 +115,7 @@ func (c *Credential) ChangePasswordWithConfig(config Config, oldPassword, newPas
 // ChangePasswordWithConfigAndIP changes the password for the given Credential and updates the Credential to meet the Config parameters if necessary
 func (c *Credential) ChangePasswordWithConfigAndIP(config Config, oldPassword, newPassword string, ip net.IP) error {
 	if !c.matchPassword(oldPassword, config.AuditLogger, ip) {
-		return fmt.Errorf("Old password does not match existing password")
+		return errors.New("Old password does not match existing password")
 	}
 	return c.ResetWithConfigAndIP(config, newPassword, ip)
 }

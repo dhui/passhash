@@ -2,7 +2,7 @@ package passhash
 
 import (
 	"context"
-	"fmt"
+	"errors"
 )
 
 // CredentialStore is an interfance for customizing Credential storage
@@ -24,10 +24,10 @@ func (d DummyCredentialStore) StoreContext(context.Context, *Credential) error {
 
 // Load only returns errors
 func (d DummyCredentialStore) Load(UserID) (*Credential, error) {
-	return nil, fmt.Errorf("DummyCredentialStore does not support loading credentials")
+	return nil, errors.New("DummyCredentialStore does not support loading credentials")
 }
 
 // LoadContext only returns errors
 func (d DummyCredentialStore) LoadContext(context.Context, UserID) (*Credential, error) {
-	return nil, fmt.Errorf("DummyCredentialStore does not support loading credentials")
+	return nil, errors.New("DummyCredentialStore does not support loading credentials")
 }
