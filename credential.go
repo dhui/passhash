@@ -118,7 +118,7 @@ func (c *Credential) ChangePasswordWithConfigAndIP(config Config, oldPassword, n
 		return errors.New("Old password does not match existing password")
 	}
 	if subtle.ConstantTimeCompare([]byte(oldPassword), []byte(newPassword)) == 1 {
-		return errors.New("Password unchanged")
+		return ErrPasswordUnchanged
 	}
 	return c.ResetWithConfigAndIP(config, newPassword, ip)
 }
