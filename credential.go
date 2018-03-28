@@ -98,29 +98,29 @@ func (c *Credential) MatchesPasswordWithConfigAndIP(config Config, password stri
 }
 
 // Reset resets the password for the given Credential and updates the Credential to use the recommended safe key derivation function and parameters
-func (c *Credential) Reset(oldPassword, newPassword string) (updated bool, err error) {
+func (c *Credential) Reset(oldPassword, newPassword string) error {
 	return c.ResetWithConfig(DefaultConfig, oldPassword, newPassword)
 }
 
 // ResetWithIP resets the password for the given Credential and updates the Credential to use the recommended safe key derivation function and parameters
-func (c *Credential) ResetWithIP(oldPassword, newPassword string, ip net.IP) (updated bool, err error) {
+func (c *Credential) ResetWithIP(oldPassword, newPassword string, ip net.IP) error {
 	return c.ResetWithConfigAndIP(DefaultConfig, oldPassword, newPassword, ip)
 }
 
 // ResetWithConfig resets the password for the given Credential and updates the Credential to meet the Config parameters if necessary
-func (c *Credential) ResetWithConfig(config Config, oldPassword, newPassword string) (updated bool, err error) {
+func (c *Credential) ResetWithConfig(config Config, oldPassword, newPassword string) error {
 	return c.ResetWithConfigAndIP(config, oldPassword, newPassword, emptyIP)
 }
 
 // ResetWithConfigAndIP resets the password for the given Credential and updates the Credential to meet the Config parameters if necessary
-func (c *Credential) ResetWithConfigAndIP(config Config, oldPassword, newPassword string, ip net.IP) (updated bool, err error) {
+func (c *Credential) ResetWithConfigAndIP(config Config, oldPassword, newPassword string, ip net.IP) error {
 	if !c.matchPassword(oldPassword, config.AuditLogger, ip) {
-		return false, fmt.Errorf("Old password does not match existing password")
+		return fmt.Errorf("Old password does not match existing password")
 	}
 	newCredential, err := config.NewCredential(c.UserID, newPassword)
 	if err != nil {
-		return false, err
+		return err
 	}
 	*c = *newCredential
-	return true, nil
+	return nil
 }
