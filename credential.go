@@ -117,6 +117,26 @@ func (c *Credential) ChangePasswordWithConfigAndIP(config Config, oldPassword, n
 	if !c.matchPassword(oldPassword, config.AuditLogger, ip) {
 		return fmt.Errorf("Old password does not match existing password")
 	}
+	return c.ResetWithConfigAndIP(config, newPassword, ip)
+}
+
+// Reset resets the password for the given Credential and updates the Credential to use the recommended safe key derivation function and parameters
+func (c *Credential) Reset(newPassword string) error {
+	return c.ResetWithConfig(DefaultConfig, newPassword)
+}
+
+// ResetWithIP resets the password for the given Credential and updates the Credential to use the recommended safe key derivation function and parameters
+func (c *Credential) ResetWithIP(newPassword string, ip net.IP) error {
+	return c.ResetWithConfigAndIP(DefaultConfig, newPassword, ip)
+}
+
+// ResetWithConfig resets the password for the given Credential and updates the Credential to meet the Config parameters if necessary
+func (c *Credential) ResetWithConfig(config Config, newPassword string) error {
+	return c.ResetWithConfigAndIP(config, newPassword, emptyIP)
+}
+
+// ResetWithConfigAndIP resets the password for the given Credential and updates the Credential to meet the Config parameters if necessary
+func (c *Credential) ResetWithConfigAndIP(config Config, newPassword string, ip net.IP) error {
 	newCredential, err := config.NewCredential(c.UserID, newPassword)
 	if err != nil {
 		return err

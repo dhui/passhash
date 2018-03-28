@@ -104,4 +104,8 @@ func Example() {
 	if err = credential.ChangePassword(password, newPassword); err != nil {
 		// Handle PasswordPoliciesNotMet error
 	}
+	newPassword2 := "newinsecurepassword2"
+	if err = credential.Reset(newPassword2); err != nil {
+		// Handle PasswordPoliciesNotMet error
+	}
 }

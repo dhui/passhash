@@ -382,3 +382,51 @@ func TestChangePasswordWithIPIncorrectOldPassword(t *testing.T) {
 		t.Error("Should have gotten error resetting password")
 	}
 }
+
+func TestReset(t *testing.T) {
+	userID := UserID(0)
+	password := "insecurepassword"
+	credential, err := NewCredential(userID, password)
+	if err != nil {
+		t.Error("Unable to create new Credential")
+	}
+	if err := credential.Reset("newInsecurePassword"); err != nil {
+		t.Error("Got error resetting password.", err)
+	}
+}
+
+func TestResetNewPasswordDoesNotMeetPasswordPolicy(t *testing.T) {
+	userID := UserID(0)
+	password := "insecurepassword"
+	credential, err := NewCredential(userID, password)
+	if err != nil {
+		t.Error("Unable to create new Credential")
+	}
+	if err := credential.Reset("tooshort"); err == nil {
+		t.Error("Should have gotten error resetting password")
+	}
+}
+
+func TestResetWithIP(t *testing.T) {
+	userID := UserID(0)
+	password := "insecurepassword"
+	credential, err := NewCredential(userID, password)
+	if err != nil {
+		t.Error("Unable to create new Credential")
+	}
+	if err := credential.ResetWithIP("newInsecurePassword", emptyIP); err != nil {
+		t.Error("Got error resetting password.", err)
+	}
+}
+
+func TestResetWithIPNewPasswordDoesNotMeetPasswordPolicy(t *testing.T) {
+	userID := UserID(0)
+	password := "insecurepassword"
+	credential, err := NewCredential(userID, password)
+	if err != nil {
+		t.Error("Unable to create new Credential")
+	}
+	if err := credential.ResetWithIP("tooshort", emptyIP); err == nil {
+		t.Error("Should have gotten error resetting password")
+	}
+}
