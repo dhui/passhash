@@ -3,13 +3,26 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:61a86f0be8b466d6e3fbdabb155aaa4006137cb5e3fd3b949329d103fa0ceb0f"
   name = "golang.org/x/crypto"
-  packages = ["bcrypt","blowfish","pbkdf2","scrypt","sha3"]
-  revision = "42ff06aea7c329876e5a0fe94acc96902accf0ad"
+  packages = [
+    "bcrypt",
+    "blowfish",
+    "pbkdf2",
+    "scrypt",
+    "sha3",
+  ]
+  pruneopts = ""
+  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "165738eba647a6b1c4c3e71bba1dc5bfe9417b41af1bf06ec354b9c48f670769"
+  input-imports = [
+    "golang.org/x/crypto/bcrypt",
+    "golang.org/x/crypto/pbkdf2",
+    "golang.org/x/crypto/scrypt",
+    "golang.org/x/crypto/sha3",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
