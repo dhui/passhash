@@ -1,8 +1,12 @@
-package passhash
+package passhash_test
 
 import (
 	"errors"
 	"testing"
+)
+
+import (
+	"github.com/dhui/passhash"
 )
 
 type TestingWorkFactor struct {
@@ -21,9 +25,9 @@ func (wf TestingWorkFactor) Unmarshal([]int) error {
 }
 
 func TestWorkFactorsEqualDiffTypes(t *testing.T) {
-	a := &Pbkdf2WorkFactor{}
-	b := &BcryptWorkFactor{}
-	if WorkFactorsEqual(a, b) {
+	a := &passhash.Pbkdf2WorkFactor{}
+	b := &passhash.BcryptWorkFactor{}
+	if passhash.WorkFactorsEqual(a, b) {
 		t.Errorf("WorkFactors with different types are considered equal. %T == %T", a, b)
 	}
 }
@@ -31,10 +35,10 @@ func TestWorkFactorsEqualDiffTypes(t *testing.T) {
 func TestWorkFactorsEqualMarshalError(t *testing.T) {
 	a := TestingWorkFactor{Error: true, Len: 10}
 	b := TestingWorkFactor{Error: false, Len: 10}
-	if WorkFactorsEqual(a, b) {
+	if passhash.WorkFactorsEqual(a, b) {
 		t.Errorf("WorkFactors with marshaling error are considered equal. %T == %T", a, b)
 	}
-	if WorkFactorsEqual(b, a) {
+	if passhash.WorkFactorsEqual(b, a) {
 		t.Errorf("WorkFactors with marshaling error are considered equal. %T == %T", b, a)
 	}
 }
@@ -42,35 +46,35 @@ func TestWorkFactorsEqualMarshalError(t *testing.T) {
 func TestWorkFactorsEqualDiffLen(t *testing.T) {
 	a := TestingWorkFactor{Error: false, Len: 10}
 	b := TestingWorkFactor{Error: false, Len: 5}
-	if WorkFactorsEqual(a, b) {
+	if passhash.WorkFactorsEqual(a, b) {
 		t.Errorf("WorkFactors with different \"lengths\" are considered equal. %T == %T", a, b)
 	}
 }
 
 func TestWorkFactorsEqual(t *testing.T) {
-	a := &ScryptWorkFactor{R: 1, P: 2, N: 3}
-	b := &ScryptWorkFactor{R: 1, P: 2, N: 3}
-	if !WorkFactorsEqual(a, b) {
+	a := &passhash.ScryptWorkFactor{R: 1, P: 2, N: 3}
+	b := &passhash.ScryptWorkFactor{R: 1, P: 2, N: 3}
+	if !passhash.WorkFactorsEqual(a, b) {
 		t.Errorf("The same WorkFactors are not considered equal. %v != %v", a, b)
 	}
 }
 
 func TestWorkFactorsEqualDifferent(t *testing.T) {
-	a := &ScryptWorkFactor{R: 1, P: 2, N: 3}
-	b := &ScryptWorkFactor{R: 1, P: 2, N: 4}
-	if WorkFactorsEqual(a, b) {
+	a := &passhash.ScryptWorkFactor{R: 1, P: 2, N: 3}
+	b := &passhash.ScryptWorkFactor{R: 1, P: 2, N: 4}
+	if passhash.WorkFactorsEqual(a, b) {
 		t.Errorf("Different WorkFactors are considered equal. %v == %v", a, b)
 	}
 }
 
 func TestConfigNewCredentialFailsPasswordPolicies(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "tooshort"
-	_, err := DefaultConfig.NewCredential(userID, password)
+	_, err := passhash.DefaultConfig.NewCredential(userID, password)
 	if err == nil {
 		t.Errorf("Password that didn't meet password policies created new credential. %v", err)
 	}
-	_, ok := err.(PasswordPoliciesNotMet)
+	_, ok := err.(passhash.PasswordPoliciesNotMet)
 	if !ok {
 		t.Errorf("error should be of type PasswordPoliciesNotMet instead of %T", err)
 	}
@@ -83,20 +87,20 @@ func (re readerError) Read(p []byte) (n int, err error) {
 }
 
 func TestNewCredentialRandError(t *testing.T) {
-	origRandReader := cryptoRandReader
+	origRandReader := passhash.GetRandReader()
 	defer func() {
 		// Very important to reset the global randReader. Otherwise other tests will fail
-		cryptoRandReader = origRandReader
+		passhash.SetRandReader(origRandReader)
 	}()
-	cryptoRandReader = readerError{}
-	userID := UserID(0)
+	passhash.SetRandReader(readerError{})
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	if _, err := DefaultConfig.NewCredential(userID, password); err == nil {
+	if _, err := passhash.DefaultConfig.NewCredential(userID, password); err == nil {
 		t.Error("No error hit when calling random numbers")
 	}
 }
 
-func testWorkFactorMarshal(t *testing.T, workFactor WorkFactor, expected []int) {
+func testWorkFactorMarshal(t *testing.T, workFactor passhash.WorkFactor, expected []int) {
 	marshaled, err := workFactor.Marshal()
 	if err != nil {
 		t.Fatalf("Error marshaling workFactor: %T. %v", workFactor, err)
@@ -111,7 +115,7 @@ func testWorkFactorMarshal(t *testing.T, workFactor WorkFactor, expected []int) 
 	}
 }
 
-func testWorkFactorUnmarshal(t *testing.T, data []int, tester WorkFactor, expected WorkFactor) {
+func testWorkFactorUnmarshal(t *testing.T, data []int, tester passhash.WorkFactor, expected passhash.WorkFactor) {
 	if err := tester.Unmarshal(data); err != nil {
 		t.Fatalf("Error unmarshaling workFactor: %T. %v", tester, err)
 	}
@@ -122,48 +126,49 @@ func testWorkFactorUnmarshal(t *testing.T, data []int, tester WorkFactor, expect
 	testWorkFactorMarshal(t, tester, expectedMarshaled)
 }
 
-func testWorkFactorUnmarshalError(t *testing.T, data []int, tester WorkFactor) {
+func testWorkFactorUnmarshalError(t *testing.T, data []int, tester passhash.WorkFactor) {
 	if err := tester.Unmarshal(data); err == nil {
 		t.Errorf("Successfully unmarshaling workFactor: %T with data: %v", tester, data)
 	}
 }
 
 func TestPdkdf2WorkFactorMarshal(t *testing.T) {
-	testWorkFactorMarshal(t, &Pbkdf2WorkFactor{Iter: 1}, []int{1})
+	testWorkFactorMarshal(t, &passhash.Pbkdf2WorkFactor{Iter: 1}, []int{1})
 }
 
 func TestPdkdf2WorkFactorUnmarshal(t *testing.T) {
-	testWorkFactorUnmarshal(t, []int{1}, &Pbkdf2WorkFactor{}, &Pbkdf2WorkFactor{Iter: 1})
+	testWorkFactorUnmarshal(t, []int{1}, &passhash.Pbkdf2WorkFactor{}, &passhash.Pbkdf2WorkFactor{Iter: 1})
 }
 
 func TestPdkdf2WorkFactorUnmarshalError(t *testing.T) {
-	testWorkFactorUnmarshalError(t, []int{}, &Pbkdf2WorkFactor{})
-	testWorkFactorUnmarshalError(t, []int{1, 2}, &Pbkdf2WorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{}, &passhash.Pbkdf2WorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{1, 2}, &passhash.Pbkdf2WorkFactor{})
 }
 
 func TestBcryptWorkFactorMarshal(t *testing.T) {
-	testWorkFactorMarshal(t, &BcryptWorkFactor{Cost: 1}, []int{1})
+	testWorkFactorMarshal(t, &passhash.BcryptWorkFactor{Cost: 1}, []int{1})
 }
 
 func TestBcryptWorkFactorUnmarshal(t *testing.T) {
-	testWorkFactorUnmarshal(t, []int{1}, &BcryptWorkFactor{}, &BcryptWorkFactor{Cost: 1})
+	testWorkFactorUnmarshal(t, []int{1}, &passhash.BcryptWorkFactor{}, &passhash.BcryptWorkFactor{Cost: 1})
 }
 
 func TestBcryptWorkFactorUnmarshalError(t *testing.T) {
-	testWorkFactorUnmarshalError(t, []int{}, &BcryptWorkFactor{})
-	testWorkFactorUnmarshalError(t, []int{1, 2}, &BcryptWorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{}, &passhash.BcryptWorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{1, 2}, &passhash.BcryptWorkFactor{})
 }
 
 func TestScryptWorkFactorMarshal(t *testing.T) {
-	testWorkFactorMarshal(t, &ScryptWorkFactor{R: 1, P: 2, N: 3}, []int{1, 2, 3})
+	testWorkFactorMarshal(t, &passhash.ScryptWorkFactor{R: 1, P: 2, N: 3}, []int{1, 2, 3})
 }
 
 func TestScryptWorkFactorUnmarshal(t *testing.T) {
-	testWorkFactorUnmarshal(t, []int{1, 2, 3}, &ScryptWorkFactor{}, &ScryptWorkFactor{R: 1, P: 2, N: 3})
+	testWorkFactorUnmarshal(t, []int{1, 2, 3}, &passhash.ScryptWorkFactor{},
+		&passhash.ScryptWorkFactor{R: 1, P: 2, N: 3})
 }
 
 func TestScryptWorkFactorUnmarshalError(t *testing.T) {
-	testWorkFactorUnmarshalError(t, []int{}, &ScryptWorkFactor{})
-	testWorkFactorUnmarshalError(t, []int{1, 2}, &BcryptWorkFactor{})
-	testWorkFactorUnmarshalError(t, []int{1, 2, 3, 4}, &BcryptWorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{}, &passhash.ScryptWorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{1, 2}, &passhash.BcryptWorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{1, 2, 3, 4}, &passhash.BcryptWorkFactor{})
 }

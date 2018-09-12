@@ -1,29 +1,33 @@
-package passhash
+package passhash_test
 
 import (
 	"context"
 	"testing"
 )
 
+import (
+	"github.com/dhui/passhash"
+)
+
 func TestDummyCredentialStoreStore(t *testing.T) {
-	store := DummyCredentialStore{}
-	credential := &Credential{}
+	store := passhash.DummyCredentialStore{}
+	credential := &passhash.Credential{}
 	if err := store.Store(credential); err != nil {
 		t.Error("Got error storing credential.", err)
 	}
 }
 
 func TestDummyCredentialStoreStoreContext(t *testing.T) {
-	store := DummyCredentialStore{}
-	credential := &Credential{}
+	store := passhash.DummyCredentialStore{}
+	credential := &passhash.Credential{}
 	if err := store.StoreContext(context.Background(), credential); err != nil {
 		t.Error("Got error storing credential.", err)
 	}
 }
 
 func TestDummyCredentialStoreLoad(t *testing.T) {
-	store := DummyCredentialStore{}
-	userID := UserID(0)
+	store := passhash.DummyCredentialStore{}
+	userID := passhash.UserID(0)
 	credential, err := store.Load(userID)
 	if err == nil {
 		t.Error("Got error loading credential.", err)
@@ -34,8 +38,8 @@ func TestDummyCredentialStoreLoad(t *testing.T) {
 }
 
 func TestDummyCredentialStoreLoadContext(t *testing.T) {
-	store := DummyCredentialStore{}
-	userID := UserID(0)
+	store := passhash.DummyCredentialStore{}
+	userID := passhash.UserID(0)
 	credential, err := store.LoadContext(context.Background(), userID)
 	if err == nil {
 		t.Error("Got error loading credential.", err)

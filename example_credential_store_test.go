@@ -1,4 +1,4 @@
-package passhash
+package passhash_test
 
 import (
 	"bytes"
@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+)
+
+import (
+	"github.com/dhui/passhash"
 )
 
 const (
@@ -17,7 +21,7 @@ type StringCredentialStore struct {
 	StoredCredential string
 }
 
-func (store *StringCredentialStore) Store(credential *Credential) error {
+func (store *StringCredentialStore) Store(credential *passhash.Credential) error {
 	cfParams, _ := credential.WorkFactor.Marshal()
 	cfStrParams := make([]string, 0, len(cfParams))
 	for _, param := range cfParams {
@@ -28,12 +32,12 @@ func (store *StringCredentialStore) Store(credential *Credential) error {
 	return nil
 }
 
-func (store *StringCredentialStore) StoreContext(ctx context.Context, credential *Credential) error {
+func (store *StringCredentialStore) StoreContext(ctx context.Context, credential *passhash.Credential) error {
 	return store.Store(credential)
 }
 
-func (store *StringCredentialStore) Load(UserID) (*Credential, error) {
-	credential := Credential{}
+func (store *StringCredentialStore) Load(passhash.UserID) (*passhash.Credential, error) {
+	credential := passhash.Credential{}
 
 	var cfStore string
 	fmt.Sscanf(store.StoredCredential, storeCredentialFormat, &credential.Kdf, &cfStore, &credential.Salt, &credential.Hash)
@@ -48,7 +52,7 @@ func (store *StringCredentialStore) Load(UserID) (*Credential, error) {
 		cfParams = append(cfParams, i)
 	}
 
-	wf, err := NewWorkFactorForKdf(credential.Kdf)
+	wf, err := passhash.NewWorkFactorForKdf(credential.Kdf)
 	if err != nil {
 		return nil, err
 	}
@@ -58,14 +62,15 @@ func (store *StringCredentialStore) Load(UserID) (*Credential, error) {
 	return &credential, nil
 }
 
-func (store *StringCredentialStore) LoadContext(ctx context.Context, userID UserID) (*Credential, error) {
+func (store *StringCredentialStore) LoadContext(ctx context.Context, userID passhash.UserID) (*passhash.Credential,
+	error) {
 	return store.Load(userID)
 }
 
 func ExampleCredentialStore() {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	origCredential, err := NewCredential(userID, password)
+	origCredential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		fmt.Println("Error creating credential.", err)
 		return

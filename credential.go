@@ -7,7 +7,8 @@ import (
 	"net"
 )
 
-var emptyIP = net.IP{}
+// EmptyIP is the cannonical value for an empty IP. This value should not be modified
+var EmptyIP = net.IP{}
 
 // Credential is a password specification.
 // It contains all of the parameters necessary to generate and verify a password for a user
@@ -82,7 +83,7 @@ func (c *Credential) MatchesPasswordWithIP(password string, ip net.IP) (matched,
 // MatchesPasswordWithConfig checks if the provided password matches the Credential
 // and updates the Credential to meet the Config parameters if necessary
 func (c *Credential) MatchesPasswordWithConfig(config Config, password string) (matched, updated bool) {
-	return c.MatchesPasswordWithConfigAndIP(config, password, emptyIP)
+	return c.MatchesPasswordWithConfigAndIP(config, password, EmptyIP)
 }
 
 // MatchesPasswordWithConfigAndIP checks if the provided password matches the Credential
@@ -109,7 +110,7 @@ func (c *Credential) ChangePasswordWithIP(oldPassword, newPassword string, ip ne
 
 // ChangePasswordWithConfig changes the password for the given Credential and updates the Credential to meet the Config parameters if necessary
 func (c *Credential) ChangePasswordWithConfig(config Config, oldPassword, newPassword string) error {
-	return c.ChangePasswordWithConfigAndIP(config, oldPassword, newPassword, emptyIP)
+	return c.ChangePasswordWithConfigAndIP(config, oldPassword, newPassword, EmptyIP)
 }
 
 // ChangePasswordWithConfigAndIP changes the password for the given Credential and updates the Credential to meet the Config parameters if necessary
@@ -135,7 +136,7 @@ func (c *Credential) ResetWithIP(newPassword string, ip net.IP) error {
 
 // ResetWithConfig resets the password for the given Credential and updates the Credential to meet the Config parameters if necessary
 func (c *Credential) ResetWithConfig(config Config, newPassword string) error {
-	return c.ResetWithConfigAndIP(config, newPassword, emptyIP)
+	return c.ResetWithConfigAndIP(config, newPassword, EmptyIP)
 }
 
 // ResetWithConfigAndIP resets the password for the given Credential and updates the Credential to meet the Config parameters if necessary

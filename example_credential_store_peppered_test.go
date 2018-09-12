@@ -1,4 +1,4 @@
-package passhash
+package passhash_test
 
 import (
 	"bytes"
@@ -8,6 +8,10 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+)
+
+import (
+	"github.com/dhui/passhash"
 )
 
 var pepperGrinder PepperGrinder
@@ -70,17 +74,18 @@ type StringCredentialPepperedStore struct {
 	Nonce    []byte
 }
 
-func (store *StringCredentialPepperedStore) Store(credential *Credential) error {
+func (store *StringCredentialPepperedStore) Store(credential *passhash.Credential) error {
 	store.PepperID = DefaultPepperID
 	store.Nonce, credential.Hash = pepperGrinder.Encrypt(credential.Hash)
 	return store.StringCredentialStore.Store(credential)
 }
 
-func (store *StringCredentialPepperedStore) StoreContext(ctx context.Context, credential *Credential) error {
+func (store *StringCredentialPepperedStore) StoreContext(ctx context.Context,
+	credential *passhash.Credential) error {
 	return store.Store(credential)
 }
 
-func (store *StringCredentialPepperedStore) Load(id UserID) (*Credential, error) {
+func (store *StringCredentialPepperedStore) Load(id passhash.UserID) (*passhash.Credential, error) {
 	credential, err := store.StringCredentialStore.Load(id)
 	if err != nil {
 		return nil, err
@@ -94,14 +99,14 @@ func (store *StringCredentialPepperedStore) Load(id UserID) (*Credential, error)
 	return credential, nil
 }
 
-func (store *StringCredentialPepperedStore) LoadContext(id UserID) (*Credential, error) {
+func (store *StringCredentialPepperedStore) LoadContext(id passhash.UserID) (*passhash.Credential, error) {
 	return store.Load(id)
 }
 
 func ExampleCredentialStore_peppered() {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	origCredential, err := NewCredential(userID, password)
+	origCredential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		fmt.Println("Error creating credential.", err)
 		return

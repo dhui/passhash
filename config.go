@@ -3,10 +3,21 @@ package passhash
 import (
 	"crypto/rand"
 	"fmt"
+	"io"
 	"reflect"
 )
 
-var cryptoRandReader = rand.Reader
+var randReader = rand.Reader
+
+// GetRandReader gets the io.Reader responsible for generating random bytes used by passhash
+func GetRandReader() io.Reader {
+	return randReader
+}
+
+// SetRandReader sets the io.Reader used by passhash to generate random bytes
+func SetRandReader(reader io.Reader) {
+	randReader = reader
+}
 
 // WorkFactor describes the work/cost for a KDF
 // The interface is similar to Go's "encoding" Marshaler/Unmarshalers
@@ -124,7 +135,7 @@ func (c Config) NewCredential(userID UserID, password string) (*Credential, erro
 		return nil, passwordPolicyFailures
 	}
 	salt := make([]byte, c.SaltSize)
-	if _, err := cryptoRandReader.Read(salt); err != nil {
+	if _, err := randReader.Read(salt); err != nil {
 		return nil, err
 	}
 	hash, err := getPasswordHash(c.Kdf, c.WorkFactor, salt, c.KeyLength, password)

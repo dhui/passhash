@@ -1,4 +1,4 @@
-package passhash
+package passhash_test
 
 import (
 	_ "crypto/sha256"
@@ -6,21 +6,15 @@ import (
 	"testing"
 )
 
-type invalidWorkFactor struct {
-}
+import (
+	"github.com/dhui/passhash"
+)
 
-func (wf *invalidWorkFactor) Marshal() ([]int, error) {
-	return []int{}, nil
-}
-
-func (wf *invalidWorkFactor) Unmarshal(p []int) error {
-	return nil
-}
-
-func testNew(t *testing.T, kdf Kdf) {
-	userID := UserID(0)
+func testNew(t *testing.T, kdf passhash.Kdf) {
+	userID := passhash.UserID(0)
 	password := "foobar"
-	config := Config{Kdf: kdf, WorkFactor: DefaultWorkFactor[kdf], SaltSize: 16, KeyLength: 32, AuditLogger: &DummyAuditLogger{}, Store: DummyCredentialStore{}}
+	config := passhash.Config{Kdf: kdf, WorkFactor: passhash.DefaultWorkFactor[kdf], SaltSize: 16,
+		KeyLength: 32, AuditLogger: &passhash.DummyAuditLogger{}, Store: passhash.DummyCredentialStore{}}
 	credential, err := config.NewCredential(userID, password)
 	if err != nil {
 		t.Errorf("Failed to get password credential for Kdf %v. Got error %v", kdf, err)
@@ -34,86 +28,60 @@ func testNew(t *testing.T, kdf Kdf) {
 }
 
 func TestNewPbkdf2Sha256(t *testing.T) {
-	testNew(t, Pbkdf2Sha256)
+	testNew(t, passhash.Pbkdf2Sha256)
 }
 
 func TestNewPbkdf2Sha512(t *testing.T) {
-	testNew(t, Pbkdf2Sha512)
+	testNew(t, passhash.Pbkdf2Sha512)
 }
 
 func TestNewPbkdf2Sha3_256(t *testing.T) {
-	testNew(t, Pbkdf2Sha3_256)
+	testNew(t, passhash.Pbkdf2Sha3_256)
 }
 
 func TestNewPbkdf2Sha3_512(t *testing.T) {
-	testNew(t, Pbkdf2Sha3_512)
+	testNew(t, passhash.Pbkdf2Sha3_512)
 }
 
 func TestNewBcrypt(t *testing.T) {
-	testNew(t, Bcrypt)
+	testNew(t, passhash.Bcrypt)
 }
 
 func TestNewScrypt(t *testing.T) {
-	testNew(t, Scrypt)
+	testNew(t, passhash.Scrypt)
 }
 
 func TestNewInvalidKdf(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "foobar"
-	config := Config{Kdf: Kdf(999999), WorkFactor: &Pbkdf2WorkFactor{}}
+	config := passhash.Config{Kdf: passhash.Kdf(999999), WorkFactor: &passhash.Pbkdf2WorkFactor{}}
 	_, err := config.NewCredential(userID, password)
 	if err == nil {
 		t.Error("Able to generate a Credential with invalid Kdf")
 	}
 }
 
-func testGetPasswordHashInvalidKdfAndWorkFactorCombo(t *testing.T, kdf Kdf, workFactor WorkFactor) {
-	salt := []byte("salt")
-	password := "foobar"
-	_, err := getPasswordHash(kdf, workFactor, salt, DefaultConfig.KeyLength, password)
-	if err == nil {
-		t.Errorf("Kdf %v and WorkFactor %T considered valid combo", kdf, workFactor)
-	}
-}
-
-func TestGetPasswordHashUnsupportedWorkFactor(t *testing.T) {
-	testGetPasswordHashInvalidKdfAndWorkFactorCombo(t, Pbkdf2Sha256, &invalidWorkFactor{})
-}
-
-func TestGetPasswordHashInvalidPbkdf2WorkFactor(t *testing.T) {
-	testGetPasswordHashInvalidKdfAndWorkFactorCombo(t, Pbkdf2Sha256, &ScryptWorkFactor{})
-	testGetPasswordHashInvalidKdfAndWorkFactorCombo(t, Pbkdf2Sha256, &BcryptWorkFactor{})
-}
-
-func TestGetPasswordHashInvalidBcryptWorkFactor(t *testing.T) {
-	testGetPasswordHashInvalidKdfAndWorkFactorCombo(t, Bcrypt, &Pbkdf2WorkFactor{})
-	testGetPasswordHashInvalidKdfAndWorkFactorCombo(t, Bcrypt, &ScryptWorkFactor{})
-}
-
-func TestGetPasswordHashInvalidScryptWorkFactor(t *testing.T) {
-	testGetPasswordHashInvalidKdfAndWorkFactorCombo(t, Scrypt, &Pbkdf2WorkFactor{})
-	testGetPasswordHashInvalidKdfAndWorkFactorCombo(t, Scrypt, &BcryptWorkFactor{})
-}
-
 func TestMatchesPasswordError(t *testing.T) {
-	invalidCredential := Credential{}
+	invalidCredential := passhash.Credential{}
 	if matched, _ := invalidCredential.MatchesPassword("password"); matched {
 		t.Error("Invalid Credential validates incorrect passwords")
 	}
 }
 
 func TestNeedsUpdate(t *testing.T) {
-	origKdf := Pbkdf2Sha256
-	origWorkFactor := DefaultWorkFactor[origKdf]
-	if origKdf == DefaultConfig.Kdf {
-		t.Errorf("Original credential is already the safe recommended Kdf. %v != %v", origKdf, DefaultConfig.Kdf)
+	origKdf := passhash.Pbkdf2Sha256
+	origWorkFactor := passhash.DefaultWorkFactor[origKdf]
+	if origKdf == passhash.DefaultConfig.Kdf {
+		t.Errorf("Original credential is already the safe recommended Kdf. %v != %v", origKdf,
+			passhash.DefaultConfig.Kdf)
 	}
-	if origWorkFactor == DefaultWorkFactor[DefaultConfig.Kdf] {
-		t.Errorf("Original credential WorkFactor are already the safe recommended Kdf WorkFactor. %v != %v", origWorkFactor, DefaultWorkFactor[DefaultConfig.Kdf])
+	if origWorkFactor == passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf] {
+		t.Errorf("Original credential WorkFactor are already the safe recommended Kdf WorkFactor. %v != %v",
+			origWorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf])
 	}
 
-	config := Config{Kdf: origKdf, WorkFactor: origWorkFactor}
-	userID := UserID(0)
+	config := passhash.Config{Kdf: origKdf, WorkFactor: origWorkFactor}
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
 	credential, err := config.NewCredential(userID, password)
 	if err != nil {
@@ -125,8 +93,8 @@ func TestNeedsUpdate(t *testing.T) {
 }
 
 func TestMeetsConfigSelf(t *testing.T) {
-	config := Config{Kdf: Scrypt, WorkFactor: &ScryptWorkFactor{R: 1, P: 2, N: 2}}
-	userID := UserID(0)
+	config := passhash.Config{Kdf: passhash.Scrypt, WorkFactor: &passhash.ScryptWorkFactor{R: 1, P: 2, N: 2}}
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
 	credential, err := config.NewCredential(userID, password)
 	if err != nil {
@@ -138,9 +106,9 @@ func TestMeetsConfigSelf(t *testing.T) {
 }
 
 func TestMeetsConfigSame(t *testing.T) {
-	configA := Config{Kdf: Scrypt, WorkFactor: &ScryptWorkFactor{R: 1, P: 2, N: 2}}
-	configB := Config{Kdf: Scrypt, WorkFactor: &ScryptWorkFactor{R: 1, P: 2, N: 2}}
-	userID := UserID(0)
+	configA := passhash.Config{Kdf: passhash.Scrypt, WorkFactor: &passhash.ScryptWorkFactor{R: 1, P: 2, N: 2}}
+	configB := passhash.Config{Kdf: passhash.Scrypt, WorkFactor: &passhash.ScryptWorkFactor{R: 1, P: 2, N: 2}}
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
 	credential, err := configA.NewCredential(userID, password)
 	if err != nil {
@@ -152,9 +120,9 @@ func TestMeetsConfigSame(t *testing.T) {
 }
 
 func TestMeetsConfigDifferentKdf(t *testing.T) {
-	configA := Config{Kdf: Scrypt, WorkFactor: &ScryptWorkFactor{R: 1, P: 2, N: 2}}
-	configB := Config{Kdf: Bcrypt, WorkFactor: &BcryptWorkFactor{Cost: 5}}
-	userID := UserID(0)
+	configA := passhash.Config{Kdf: passhash.Scrypt, WorkFactor: &passhash.ScryptWorkFactor{R: 1, P: 2, N: 2}}
+	configB := passhash.Config{Kdf: passhash.Bcrypt, WorkFactor: &passhash.BcryptWorkFactor{Cost: 5}}
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
 	credential, err := configA.NewCredential(userID, password)
 	if err != nil {
@@ -166,9 +134,9 @@ func TestMeetsConfigDifferentKdf(t *testing.T) {
 }
 
 func TestMeetsConfigDifferentWorkFactor(t *testing.T) {
-	configA := Config{Kdf: Scrypt, WorkFactor: &ScryptWorkFactor{R: 1, P: 2, N: 2}}
-	configB := Config{Kdf: Scrypt, WorkFactor: &ScryptWorkFactor{R: 1, P: 2, N: 4}}
-	userID := UserID(0)
+	configA := passhash.Config{Kdf: passhash.Scrypt, WorkFactor: &passhash.ScryptWorkFactor{R: 1, P: 2, N: 2}}
+	configB := passhash.Config{Kdf: passhash.Scrypt, WorkFactor: &passhash.ScryptWorkFactor{R: 1, P: 2, N: 4}}
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
 	credential, err := configA.NewCredential(userID, password)
 	if err != nil {
@@ -180,13 +148,13 @@ func TestMeetsConfigDifferentWorkFactor(t *testing.T) {
 }
 
 func TestMatchesPasswordWithIP(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := DefaultConfig.NewCredential(userID, password)
+	credential, err := passhash.DefaultConfig.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
-	matched, updated := credential.MatchesPasswordWithIP(password, emptyIP)
+	matched, updated := credential.MatchesPasswordWithIP(password, passhash.EmptyIP)
 	if !matched {
 		t.Error("Password did not match")
 	}
@@ -196,17 +164,19 @@ func TestMatchesPasswordWithIP(t *testing.T) {
 }
 
 func TestMatchesPasswordMatchNoUpdate(t *testing.T) {
-	origKdf := Scrypt
-	origWorkFactor := DefaultWorkFactor[origKdf]
-	if origKdf != DefaultConfig.Kdf {
-		t.Errorf("Original credential is not the safe recommended Kdf. %v != %v", origKdf, DefaultConfig.Kdf)
+	origKdf := passhash.Scrypt
+	origWorkFactor := passhash.DefaultWorkFactor[origKdf]
+	if origKdf != passhash.DefaultConfig.Kdf {
+		t.Errorf("Original credential is not the safe recommended Kdf. %v != %v", origKdf,
+			passhash.DefaultConfig.Kdf)
 	}
-	if origWorkFactor != DefaultWorkFactor[DefaultConfig.Kdf] {
-		t.Errorf("Original credential WorkFactor is not the safe recommended Kdf WorkFactor. %v != %v", origWorkFactor, DefaultWorkFactor[DefaultConfig.Kdf])
+	if origWorkFactor != passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf] {
+		t.Errorf("Original credential WorkFactor is not the safe recommended Kdf WorkFactor. %v != %v",
+			origWorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf])
 	}
 
-	config := Config{Kdf: origKdf, WorkFactor: origWorkFactor}
-	userID := UserID(0)
+	config := passhash.Config{Kdf: origKdf, WorkFactor: origWorkFactor}
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
 	credential, err := config.NewCredential(userID, password)
 	if err != nil {
@@ -226,26 +196,30 @@ func TestMatchesPasswordMatchNoUpdate(t *testing.T) {
 	if updated {
 		t.Error("Up-to-date credentials updated")
 	}
-	if credential.Kdf != DefaultConfig.Kdf {
-		t.Errorf("Credential Kdf unexpectedly updated from safe recommended Kdf. %v != %v", credential.Kdf, DefaultConfig.Kdf)
+	if credential.Kdf != passhash.DefaultConfig.Kdf {
+		t.Errorf("Credential Kdf unexpectedly updated from safe recommended Kdf. %v != %v", credential.Kdf,
+			passhash.DefaultConfig.Kdf)
 	}
-	if credential.WorkFactor != DefaultWorkFactor[DefaultConfig.Kdf] {
-		t.Errorf("Credential WorkFactor unexpected updated from safe recommended Kdf WorkFactor. %v != %v", credential.WorkFactor, DefaultWorkFactor[DefaultConfig.Kdf])
+	if credential.WorkFactor != passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf] {
+		t.Errorf("Credential WorkFactor unexpected updated from safe recommended Kdf WorkFactor. %v != %v",
+			credential.WorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf])
 	}
 }
 
 func TestMatchesPasswordUpdateKdfAndWorkFactor(t *testing.T) {
-	origKdf := Pbkdf2Sha256
-	origWorkFactor := DefaultWorkFactor[origKdf]
-	if origKdf == DefaultConfig.Kdf {
-		t.Errorf("Original credential is already the safe recommended Kdf. %v != %v", origKdf, DefaultConfig.Kdf)
+	origKdf := passhash.Pbkdf2Sha256
+	origWorkFactor := passhash.DefaultWorkFactor[origKdf]
+	if origKdf == passhash.DefaultConfig.Kdf {
+		t.Errorf("Original credential is already the safe recommended Kdf. %v != %v", origKdf,
+			passhash.DefaultConfig.Kdf)
 	}
-	if origWorkFactor == DefaultWorkFactor[DefaultConfig.Kdf] {
-		t.Errorf("Original credential WorkFactor are already the safe recommended Kdf WorkFactor. %v != %v", origWorkFactor, DefaultWorkFactor[DefaultConfig.Kdf])
+	if origWorkFactor == passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf] {
+		t.Errorf("Original credential WorkFactor are already the safe recommended Kdf WorkFactor. %v != %v",
+			origWorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf])
 	}
 
-	config := Config{Kdf: origKdf, WorkFactor: origWorkFactor}
-	userID := UserID(0)
+	config := passhash.Config{Kdf: origKdf, WorkFactor: origWorkFactor}
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
 	credential, err := config.NewCredential(userID, password)
 	if err != nil {
@@ -265,24 +239,27 @@ func TestMatchesPasswordUpdateKdfAndWorkFactor(t *testing.T) {
 	if !updated {
 		t.Error("Outdated credential not updated")
 	}
-	if credential.Kdf != DefaultConfig.Kdf {
-		t.Errorf("Updated credential Kdf did not update to safe recommended Kdf. %v != %v", credential.Kdf, DefaultConfig.Kdf)
+	if credential.Kdf != passhash.DefaultConfig.Kdf {
+		t.Errorf("Updated credential Kdf did not update to safe recommended Kdf. %v != %v", credential.Kdf,
+			passhash.DefaultConfig.Kdf)
 	}
-	if credential.WorkFactor != DefaultWorkFactor[DefaultConfig.Kdf] {
-		t.Errorf("Updated credential WorkFactor did not update to safe recommended Kdf WorkFactor. %v != %v", credential.WorkFactor, DefaultWorkFactor[DefaultConfig.Kdf])
+	if credential.WorkFactor != passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf] {
+		t.Errorf("Updated credential WorkFactor did not update to safe recommended Kdf WorkFactor. %v != %v",
+			credential.WorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf])
 	}
 }
 
 func TestMatchesPasswordUpdateWorkFactor(t *testing.T) {
-	kdf := DefaultConfig.Kdf
-	origWorkFactor := ScryptWorkFactor{N: 256, R: 16, P: 1}
-	defaultScryptWorkFactor := *DefaultWorkFactor[kdf].(*ScryptWorkFactor)
+	kdf := passhash.DefaultConfig.Kdf
+	origWorkFactor := passhash.ScryptWorkFactor{N: 256, R: 16, P: 1}
+	defaultScryptWorkFactor := *passhash.DefaultWorkFactor[kdf].(*passhash.ScryptWorkFactor)
 	if origWorkFactor == defaultScryptWorkFactor {
-		t.Errorf("Original credential is already the safe recommended Kdf WorkFactor. %v == %v", origWorkFactor, defaultScryptWorkFactor)
+		t.Errorf("Original credential is already the safe recommended Kdf WorkFactor. %v == %v",
+			origWorkFactor, defaultScryptWorkFactor)
 	}
 
-	config := Config{Kdf: kdf, WorkFactor: &origWorkFactor}
-	userID := UserID(0)
+	config := passhash.Config{Kdf: kdf, WorkFactor: &origWorkFactor}
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
 	credential, err := config.NewCredential(userID, password)
 	if err != nil {
@@ -291,7 +268,7 @@ func TestMatchesPasswordUpdateWorkFactor(t *testing.T) {
 	if credential.Kdf != kdf {
 		t.Errorf("Original credential Kdf changed. %v != %v", credential.Kdf, kdf)
 	}
-	newWorkFactor := *credential.WorkFactor.(*ScryptWorkFactor)
+	newWorkFactor := *credential.WorkFactor.(*passhash.ScryptWorkFactor)
 	if newWorkFactor != origWorkFactor {
 		t.Errorf("Original credential WorkFactor changed. %v != %v", newWorkFactor, origWorkFactor)
 	}
@@ -306,15 +283,16 @@ func TestMatchesPasswordUpdateWorkFactor(t *testing.T) {
 	if credential.Kdf != kdf {
 		t.Errorf("Updated credential Kdf changed. %v != %v", credential.Kdf, kdf)
 	}
-	if credential.WorkFactor != DefaultWorkFactor[DefaultConfig.Kdf] {
-		t.Errorf("Updated credential WorkFactor did not update to safe recommended Kdf WorkFactor. %v != %v", credential.WorkFactor, DefaultWorkFactor[DefaultConfig.Kdf])
+	if credential.WorkFactor != passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf] {
+		t.Errorf("Updated credential WorkFactor did not update to safe recommended Kdf WorkFactor. %v != %v",
+			credential.WorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf])
 	}
 }
 
 func TestChangePassword(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
@@ -324,9 +302,9 @@ func TestChangePassword(t *testing.T) {
 }
 
 func TestChangePasswordSamePassword(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
@@ -336,9 +314,9 @@ func TestChangePasswordSamePassword(t *testing.T) {
 }
 
 func TestChangePasswordNewPasswordDoesNotMeetPasswordPolicy(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
@@ -348,9 +326,9 @@ func TestChangePasswordNewPasswordDoesNotMeetPasswordPolicy(t *testing.T) {
 }
 
 func TestChangePasswordIncorrectOldPassword(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
@@ -360,45 +338,45 @@ func TestChangePasswordIncorrectOldPassword(t *testing.T) {
 }
 
 func TestChangePasswordWithIP(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
-	if err := credential.ChangePasswordWithIP(password, "newInsecurePassword", emptyIP); err != nil {
+	if err := credential.ChangePasswordWithIP(password, "newInsecurePassword", passhash.EmptyIP); err != nil {
 		t.Error("Got error resetting password.", err)
 	}
 }
 
 func TestChangePasswordWithIPNewPasswordDoesNotMeetPasswordPolicy(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
-	if err := credential.ChangePasswordWithIP(password, "tooshort", emptyIP); err == nil {
+	if err := credential.ChangePasswordWithIP(password, "tooshort", passhash.EmptyIP); err == nil {
 		t.Error("Should have gotten error resetting password")
 	}
 }
 
 func TestChangePasswordWithIPIncorrectOldPassword(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
-	if err := credential.ChangePasswordWithIP("wrongPassword", "newInsecurePassword", emptyIP); err == nil {
+	if err := credential.ChangePasswordWithIP("wrongPassword", "newInsecurePassword", passhash.EmptyIP); err == nil {
 		t.Error("Should have gotten error resetting password")
 	}
 }
 
 func TestReset(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
@@ -408,9 +386,9 @@ func TestReset(t *testing.T) {
 }
 
 func TestResetNewPasswordDoesNotMeetPasswordPolicy(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
@@ -420,25 +398,25 @@ func TestResetNewPasswordDoesNotMeetPasswordPolicy(t *testing.T) {
 }
 
 func TestResetWithIP(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
-	if err := credential.ResetWithIP("newInsecurePassword", emptyIP); err != nil {
+	if err := credential.ResetWithIP("newInsecurePassword", passhash.EmptyIP); err != nil {
 		t.Error("Got error resetting password.", err)
 	}
 }
 
 func TestResetWithIPNewPasswordDoesNotMeetPasswordPolicy(t *testing.T) {
-	userID := UserID(0)
+	userID := passhash.UserID(0)
 	password := "insecurepassword"
-	credential, err := NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, password)
 	if err != nil {
 		t.Error("Unable to create new Credential")
 	}
-	if err := credential.ResetWithIP("tooshort", emptyIP); err == nil {
+	if err := credential.ResetWithIP("tooshort", passhash.EmptyIP); err == nil {
 		t.Error("Should have gotten error resetting password")
 	}
 }
