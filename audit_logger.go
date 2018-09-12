@@ -79,10 +79,7 @@ func (al *MemoryAuditLogger) LastN(userID UserID, n int) []Log {
 	if n >= len(origLogs) {
 		return origLogs
 	}
-	for _, log := range origLogs[len(origLogs)-n:] {
-		logs = append(logs, log)
-	}
-	return logs
+	return append(logs, origLogs[len(origLogs)-n:]...)
 }
 
 // LastNWithTypes gets the last N logs for a user with the specified types
