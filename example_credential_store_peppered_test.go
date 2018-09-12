@@ -118,8 +118,8 @@ func ExampleCredentialStore_peppered() {
 	credentialEqual := newCredential == origCredential
 	kdfEqual := newCredential.Kdf == origCredential.Kdf
 	cfEqual := newCredential.WorkFactor == origCredential.WorkFactor // Not equal due to pointer comparison
-	saltEqual := bytes.Compare(newCredential.Salt, origCredential.Salt) == 0
-	hashEqual := bytes.Compare(newCredential.Hash, origCredential.Hash) == 0
+	saltEqual := bytes.Equal(newCredential.Salt, origCredential.Salt)
+	hashEqual := bytes.Equal(newCredential.Hash, origCredential.Hash)
 	matched, updated := newCredential.MatchesPassword(password)
 	fmt.Println("credentialEqual:", credentialEqual)
 	fmt.Println("kdfEqual:", kdfEqual)
