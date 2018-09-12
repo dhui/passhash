@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-// EmptyIP is the cannonical value for an empty IP. This value should not be modified
+// EmptyIP is the canonical value for an empty IP. This value should not be modified
 var EmptyIP = net.IP{}
 
 // Credential is a password specification.

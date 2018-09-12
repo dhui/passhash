@@ -54,7 +54,7 @@ func NewPepperGrinder(key []byte) (PepperGrinder, error) {
 
 func init() {
 	var err error
-	pepperGrinder, err = NewPepperGrinder([]byte(KeyForPepperID[DefaultPepperID]))
+	pepperGrinder, err = NewPepperGrinder(KeyForPepperID[DefaultPepperID])
 	if err != nil {
 		panic(err.Error())
 	}
@@ -103,6 +103,7 @@ func (store *StringCredentialPepperedStore) LoadContext(id passhash.UserID) (*pa
 	return store.Load(id)
 }
 
+// nolint: dupl
 func ExampleCredentialStore_peppered() {
 	userID := passhash.UserID(0)
 	password := "insecurepassword"
@@ -113,7 +114,10 @@ func ExampleCredentialStore_peppered() {
 	}
 
 	store := StringCredentialPepperedStore{}
-	store.Store(origCredential)
+	if err := store.Store(origCredential); err != nil {
+		fmt.Println("Error storing credential.", err)
+		return
+	}
 	newCredential, err := store.Load(userID)
 	if err != nil {
 		fmt.Println("Error loading credential.", err)

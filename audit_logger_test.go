@@ -9,7 +9,7 @@ import (
 )
 
 // setupAuditLoggerTestData logs test data to the given AuditLogger
-func setupAuditLoggerTestData(userID passhash.UserID, al passhash.AuditLogger) int {
+func setupAuditLoggerTestData(userID passhash.UserID, al passhash.AuditLogger) int { // nolint: unparam
 	numIters := 5
 	for i := 0; i < numIters; i++ {
 		al.Log(userID, passhash.AuthnSucceeded, passhash.EmptyIP)

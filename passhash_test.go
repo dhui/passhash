@@ -10,15 +10,14 @@ import (
 
 func TestNewCredential(t *testing.T) {
 	userID := passhash.UserID(0)
-	password := "insecurepassword"
-	credential, err := passhash.NewCredential(userID, password)
+	credential, err := passhash.NewCredential(userID, testPassword)
 	if err != nil {
 		t.Fatalf("Failed to get password credential. Got error %v", err)
 	}
-	if matched, _ := credential.MatchesPassword(password); !matched {
+	if matched, _ := credential.MatchesPassword(testPassword); !matched {
 		t.Errorf("Password did not match Credential")
 	}
-	if matched, _ := credential.MatchesPassword(password + "extra"); matched {
+	if matched, _ := credential.MatchesPassword(testPassword + "extra"); matched {
 		t.Errorf("Password matched Credential")
 	}
 }
@@ -91,12 +90,11 @@ func TestNewWorkFactorError(t *testing.T) {
 }
 
 func Example() {
-	password := "insecurepassword"
-	credential, err := passhash.NewCredential(passhash.UserID(0), password)
+	credential, err := passhash.NewCredential(passhash.UserID(0), testPassword)
 	if err != nil {
 		// Handle error gettings credential
 	}
-	matched, updated := credential.MatchesPassword(password)
+	matched, updated := credential.MatchesPassword(testPassword)
 	if !matched {
 		// Handle invalid password
 	}
@@ -105,7 +103,7 @@ func Example() {
 		// store.Marshal(credential)
 	}
 	newPassword := "newinsecurepassword"
-	if err = credential.ChangePassword(password, newPassword); err != nil {
+	if err = credential.ChangePassword(testPassword, newPassword); err != nil {
 		// Handle PasswordPoliciesNotMet error
 	}
 	newPassword2 := "newinsecurepassword2"

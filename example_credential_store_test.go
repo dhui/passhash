@@ -56,7 +56,9 @@ func (store *StringCredentialStore) Load(passhash.UserID) (*passhash.Credential,
 	if err != nil {
 		return nil, err
 	}
-	wf.Unmarshal(cfParams)
+	if err := wf.Unmarshal(cfParams); err != nil {
+		return nil, err
+	}
 	credential.WorkFactor = wf
 
 	return &credential, nil
@@ -67,6 +69,7 @@ func (store *StringCredentialStore) LoadContext(ctx context.Context, userID pass
 	return store.Load(userID)
 }
 
+// nolint: dupl
 func ExampleCredentialStore() {
 	userID := passhash.UserID(0)
 	password := "insecurepassword"
@@ -77,7 +80,10 @@ func ExampleCredentialStore() {
 	}
 
 	store := StringCredentialStore{}
-	store.Store(origCredential)
+	if err := store.Store(origCredential); err != nil {
+		fmt.Println("Error storing credential.", err)
+		return
+	}
 	newCredential, err := store.Load(userID)
 	if err != nil {
 		fmt.Println("Error loading credential.", err)

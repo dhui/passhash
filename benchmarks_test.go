@@ -15,9 +15,8 @@ func BenchmarkDefaultWorkFactorPbkdfSha256(b *testing.B) {
 		Store: passhash.DummyCredentialStore{}, PasswordPolicies: []passhash.PasswordPolicy{},
 	}
 	userID := passhash.UserID(0)
-	password := "insecurepassword"
 	for i := 0; i < b.N; i++ {
-		config.NewCredential(userID, password)
+		config.NewCredential(userID, testPassword) // nolint: errcheck
 	}
 }
 
@@ -28,9 +27,8 @@ func BenchmarkDefaultWorkFactorPbkdfSha512(b *testing.B) {
 		Store: passhash.DummyCredentialStore{}, PasswordPolicies: []passhash.PasswordPolicy{},
 	}
 	userID := passhash.UserID(0)
-	password := "insecurepassword"
 	for i := 0; i < b.N; i++ {
-		config.NewCredential(userID, password)
+		config.NewCredential(userID, testPassword) // nolint: errcheck
 	}
 }
 
@@ -41,9 +39,8 @@ func BenchmarkDefaultWorkFactorPbkdfSha3_256(b *testing.B) {
 		Store: passhash.DummyCredentialStore{}, PasswordPolicies: []passhash.PasswordPolicy{},
 	}
 	userID := passhash.UserID(0)
-	password := "insecurepassword"
 	for i := 0; i < b.N; i++ {
-		config.NewCredential(userID, password)
+		config.NewCredential(userID, testPassword) // nolint: errcheck
 	}
 }
 
@@ -54,9 +51,8 @@ func BenchmarkDefaultWorkFactorPbkdfSha3_512(b *testing.B) {
 		Store: passhash.DummyCredentialStore{}, PasswordPolicies: []passhash.PasswordPolicy{},
 	}
 	userID := passhash.UserID(0)
-	password := "insecurepassword"
 	for i := 0; i < b.N; i++ {
-		config.NewCredential(userID, password)
+		config.NewCredential(userID, testPassword) // nolint: errcheck
 	}
 }
 
@@ -67,9 +63,8 @@ func BenchmarkDefaultWorkFactorBcrypt(b *testing.B) {
 		Store: passhash.DummyCredentialStore{}, PasswordPolicies: []passhash.PasswordPolicy{},
 	}
 	userID := passhash.UserID(0)
-	password := "insecurepassword"
 	for i := 0; i < b.N; i++ {
-		config.NewCredential(userID, password)
+		config.NewCredential(userID, testPassword) // nolint: errcheck
 	}
 }
 
@@ -80,8 +75,7 @@ func BenchmarkDefaultWorkFactorScrypt(b *testing.B) {
 		Store: passhash.DummyCredentialStore{}, PasswordPolicies: []passhash.PasswordPolicy{},
 	}
 	userID := passhash.UserID(0)
-	password := "insecurepassword"
 	for i := 0; i < b.N; i++ {
-		config.NewCredential(userID, password)
+		config.NewCredential(userID, testPassword) // nolint: errcheck
 	}
 }

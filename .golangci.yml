@@ -1,0 +1,27 @@
+linters:
+  enable:
+    - golint
+    - interfacer
+    - unconvert
+    - dupl
+    - goconst
+    - gofmt
+    - misspell
+    - maligned
+    - unparam
+    - nakedret
+    - prealloc
+    - gosec
+linters-settings:
+  misspell:
+    locale: US
+issues:
+  max-same: 0
+  max-per-linter: 0
+  exclude-use-default: false
+  exclude:
+    # gosec: Duplicated errcheck checks
+    - G104
+    - G201 # Re-enable once gosec considers quoted strings to be safe: https://github.com/securego/gosec/pull/240
+    # Ignore unused variables/constants for now
+    - is unused

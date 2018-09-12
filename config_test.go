@@ -94,7 +94,7 @@ func TestNewCredentialRandError(t *testing.T) {
 	}()
 	passhash.SetRandReader(readerError{})
 	userID := passhash.UserID(0)
-	password := "insecurepassword"
+	password := testPassword
 	if _, err := passhash.DefaultConfig.NewCredential(userID, password); err == nil {
 		t.Error("No error hit when calling random numbers")
 	}
