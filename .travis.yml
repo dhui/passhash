@@ -27,7 +27,7 @@ before_script:
   - golangci-lint run
 
 script:
-  - ./codecov_test.sh
+  - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 after_success:
   - bash <(curl -s https://codecov.io/bash) -X fix
