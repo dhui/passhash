@@ -22,6 +22,3 @@ issues:
   exclude:
     # gosec: Duplicated errcheck checks
     - G104
-    - G201 # Re-enable once gosec considers quoted strings to be safe: https://github.com/securego/gosec/pull/240
-    # Ignore unused variables/constants for now
-    - is unused
