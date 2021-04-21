@@ -1,2 +1,2 @@
 # How to report security issues
-Open a [GitHub issue](https://github.com/dhui/passhash/issues) and use the `security` label
+Create a new [HackerOne report](https://hackerone.com/passhash/).
