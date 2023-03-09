@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	storeCredentialFormat string = "%d %s %x %x" // Using space as a separator for Sscanf compatibility
+	storeCredentialFormat string = "%d %s %x %x" //nolint:gosec // Using space as a separator for Sscanf compatibility
 )
 
 // StringCredentialStore is an example CredentialStore that stores the Credential as a string
