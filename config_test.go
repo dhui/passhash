@@ -2,10 +2,9 @@ package passhash_test
 
 import (
 	"errors"
+	"io"
 	"testing"
-)
 
-import (
 	"github.com/dhui/passhash"
 )
 
@@ -171,4 +170,38 @@ func TestScryptWorkFactorUnmarshalError(t *testing.T) {
 	testWorkFactorUnmarshalError(t, []int{}, &passhash.ScryptWorkFactor{})
 	testWorkFactorUnmarshalError(t, []int{1, 2}, &passhash.BcryptWorkFactor{})
 	testWorkFactorUnmarshalError(t, []int{1, 2, 3, 4}, &passhash.BcryptWorkFactor{})
+}
+
+// eofAfterNReader returns at most n bytes, then EOF.
+// This simulates a short-reading RNG that terminates early.
+type eofAfterNReader struct {
+	remaining int
+}
+
+func (r *eofAfterNReader) Read(p []byte) (int, error) {
+	if r.remaining <= 0 {
+		return 0, io.EOF
+	}
+	n := r.remaining
+	if n > len(p) {
+		n = len(p)
+	}
+	for i := 0; i < n; i++ {
+		p[i] = byte(i + 1)
+	}
+	r.remaining -= n
+	return n, nil
+}
+
+func TestNewCredentialWithShortEOFReader(t *testing.T) {
+	prev := passhash.GetRandReader()
+	t.Cleanup(func() { passhash.SetRandReader(prev) })
+
+	cfg := passhash.DefaultConfig
+	cfg.SaltSize = 16
+
+	passhash.SetRandReader(&eofAfterNReader{remaining: 4})
+	if _, err := cfg.NewCredential(42, "password-1234567890"); err == nil {
+		t.Fatalf("expected error due to short-reading RNG with EOF, got nil")
+	}
 }

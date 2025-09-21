@@ -135,7 +135,7 @@ func (c Config) NewCredential(userID UserID, password string) (*Credential, erro
 		return nil, passwordPolicyFailures
 	}
 	salt := make([]byte, c.SaltSize)
-	if _, err := randReader.Read(salt); err != nil {
+	if _, err := io.ReadFull(randReader, salt); err != nil {
 		return nil, err
 	}
 	hash, err := getPasswordHash(c.Kdf, c.WorkFactor, salt, c.KeyLength, password)
