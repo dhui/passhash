@@ -31,8 +31,6 @@ const (
 	Bcrypt
 	// Scrypt is the scrypt kdf
 	Scrypt
-	// Argon2i is the argon2i kdf
-	Argon2i
 	// Argon2id is the argon2id kdf
 	Argon2id
 )
@@ -53,12 +51,13 @@ var DefaultWorkFactor = map[Kdf]WorkFactor{
 	// https://download.libsodium.org/doc/password_hashing/scrypt.html
 	// Scrypt: ScryptWorkFactor{N: 65536, R: 16, P: 1},
 	Scrypt: &ScryptWorkFactor{N: 32768, R: 16, P: 1},
-	// Argon2WorkFactor recommended params taken from Go docs
-	// https://pkg.go.dev/golang.org/x/crypto@v0.45.0/argon2
-	// TODO: revisit RFC since Go docs may be outdated
-	// https://github.com/golang/go/issues/57065
-	Argon2i:  &Argon2WorkFactor{T: 3, M: 32768, P: runtime.NumCPU()},
-	Argon2id: &Argon2WorkFactor{T: 1, M: 65536, P: runtime.NumCPU()},
+	// Argon2WorkFactor recommended params taken from RFC 9106:
+	// https://www.rfc-editor.org/rfc/rfc9106.html#name-recommendations
+	// Argon param usage analysis:
+	// https://arxiv.org/pdf/2504.17121
+	// KeePassXC defaults:
+	// https://github.com/keepassxreboot/keepassxc/blob/2.7.11/src/crypto/kdf/Argon2Kdf.h#L24-L26
+	Argon2id: &Argon2WorkFactor{T: 3, M: 65536, P: runtime.NumCPU()},
 }
 
 // NewWorkFactorForKdf returns an empty new WorkFactor for the given kdf
@@ -70,7 +69,7 @@ func NewWorkFactorForKdf(kdf Kdf) (WorkFactor, error) {
 		return &BcryptWorkFactor{}, nil
 	case Scrypt:
 		return &ScryptWorkFactor{}, nil
-	case Argon2i, Argon2id:
+	case Argon2id:
 		return &Argon2WorkFactor{}, nil
 	default:
 		return nil, fmt.Errorf("Unsupported kdf: %v", kdf)
@@ -123,8 +122,6 @@ func getPasswordHash(kdf Kdf, workFactor WorkFactor, salt []byte, keyLength int,
 		return scrypt.Key([]byte(password), salt, wf.N, wf.R, wf.P, keyLength)
 	case *Argon2WorkFactor:
 		switch kdf {
-		case Argon2i:
-			return argon2.Key([]byte(password), salt, uint32(wf.T), uint32(wf.M), uint8(wf.P), uint32(keyLength)), nil
 		case Argon2id:
 			return argon2.IDKey([]byte(password), salt, uint32(wf.T), uint32(wf.M), uint8(wf.P), uint32(keyLength)), nil
 		default:

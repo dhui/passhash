@@ -51,10 +51,6 @@ func TestNewScrypt(t *testing.T) {
 	testNew(t, passhash.Scrypt)
 }
 
-func TestNewArgon2i(t *testing.T) {
-	testNew(t, passhash.Argon2i)
-}
-
 func TestNewArgon2id(t *testing.T) {
 	testNew(t, passhash.Argon2id)
 }
