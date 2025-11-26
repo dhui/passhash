@@ -168,8 +168,23 @@ func TestScryptWorkFactorUnmarshal(t *testing.T) {
 
 func TestScryptWorkFactorUnmarshalError(t *testing.T) {
 	testWorkFactorUnmarshalError(t, []int{}, &passhash.ScryptWorkFactor{})
-	testWorkFactorUnmarshalError(t, []int{1, 2}, &passhash.BcryptWorkFactor{})
-	testWorkFactorUnmarshalError(t, []int{1, 2, 3, 4}, &passhash.BcryptWorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{1, 2}, &passhash.ScryptWorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{1, 2, 3, 4}, &passhash.ScryptWorkFactor{})
+}
+
+func TestArgon2WorkFactorMarshal(t *testing.T) {
+	testWorkFactorMarshal(t, &passhash.Argon2WorkFactor{T: 1, M: 2, P: 3}, []int{1, 2, 3})
+}
+
+func TestArgon2WorkFactorUnmarshal(t *testing.T) {
+	testWorkFactorUnmarshal(t, []int{1, 2, 3}, &passhash.Argon2WorkFactor{},
+		&passhash.Argon2WorkFactor{T: 1, M: 2, P: 3})
+}
+
+func TestArgon2WorkFactorUnmarshalError(t *testing.T) {
+	testWorkFactorUnmarshalError(t, []int{}, &passhash.Argon2WorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{1, 2}, &passhash.Argon2WorkFactor{})
+	testWorkFactorUnmarshalError(t, []int{1, 2, 3, 4}, &passhash.Argon2WorkFactor{})
 }
 
 // eofAfterNReader returns at most n bytes, then EOF.

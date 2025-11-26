@@ -82,6 +82,26 @@ func TestNewWorkFactorForKdfScrypt(t *testing.T) {
 	}
 }
 
+func TestNewWorkFactorForKdfArgon2i(t *testing.T) {
+	wf, err := passhash.NewWorkFactorForKdf(passhash.Argon2i)
+	if err != nil {
+		t.Error("Got error getting WorkFactor for Argon2i", err)
+	}
+	if _, ok := wf.(*passhash.Argon2WorkFactor); !ok {
+		t.Error("Expected Argon2i KDF to have an Argon2WorkFactor WorkFactor")
+	}
+}
+
+func TestNewWorkFactorForKdfArgon2id(t *testing.T) {
+	wf, err := passhash.NewWorkFactorForKdf(passhash.Argon2id)
+	if err != nil {
+		t.Error("Got error getting WorkFactor for Argon2id", err)
+	}
+	if _, ok := wf.(*passhash.Argon2WorkFactor); !ok {
+		t.Error("Expected Argon2id KDF to have an Argon2WorkFactor WorkFactor")
+	}
+}
+
 func TestNewWorkFactorError(t *testing.T) {
 	_, err := passhash.NewWorkFactorForKdf(passhash.Kdf(999999))
 	if err == nil {

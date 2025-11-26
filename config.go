@@ -104,6 +104,29 @@ func (wf *ScryptWorkFactor) Unmarshal(p []int) error {
 	return nil
 }
 
+// Argon2WorkFactor specifies the work/cost parameters for scrypt
+type Argon2WorkFactor struct {
+	T int // time (iterations)
+	M int // memory
+	P int // parallelism (threads)
+}
+
+// Marshal returns the marshaled WorkFactor
+func (wf *Argon2WorkFactor) Marshal() ([]int, error) {
+	return []int{wf.T, wf.M, wf.P}, nil
+}
+
+// Unmarshal unmarshals the WorkFactor
+func (wf *Argon2WorkFactor) Unmarshal(p []int) error {
+	if len(p) != 3 {
+		return fmt.Errorf("Invalid parameters to unmarshal %T", wf)
+	}
+	wf.T = p[0]
+	wf.M = p[1]
+	wf.P = p[2]
+	return nil
+}
+
 // Config provides configuration for managing credentials. e.g. creation, storing, verifying, and auditing
 type Config struct {
 	Kdf              Kdf              // The key derivation function

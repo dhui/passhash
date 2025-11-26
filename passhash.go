@@ -4,6 +4,11 @@ import (
 	"crypto"
 	"errors"
 	"fmt"
+	"runtime"
+)
+
+import (
+	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
@@ -26,6 +31,10 @@ const (
 	Bcrypt
 	// Scrypt is the scrypt kdf
 	Scrypt
+	// Argon2i is the argon2i kdf
+	Argon2i
+	// Argon2id is the argon2id kdf
+	Argon2id
 )
 
 // DefaultWorkFactor provides the default WorkFactor for a specific Kdf. Do not modify unless you're an expert.
@@ -44,6 +53,12 @@ var DefaultWorkFactor = map[Kdf]WorkFactor{
 	// https://download.libsodium.org/doc/password_hashing/scrypt.html
 	// Scrypt: ScryptWorkFactor{N: 65536, R: 16, P: 1},
 	Scrypt: &ScryptWorkFactor{N: 32768, R: 16, P: 1},
+	// Argon2WorkFactor recommended params taken from Go docs
+	// https://pkg.go.dev/golang.org/x/crypto@v0.45.0/argon2
+	// TODO: revisit RFC since Go docs may be outdated
+	// https://github.com/golang/go/issues/57065
+	Argon2i:  &Argon2WorkFactor{T: 3, M: 32768, P: runtime.NumCPU()},
+	Argon2id: &Argon2WorkFactor{T: 1, M: 65536, P: runtime.NumCPU()},
 }
 
 // NewWorkFactorForKdf returns an empty new WorkFactor for the given kdf
@@ -55,6 +70,8 @@ func NewWorkFactorForKdf(kdf Kdf) (WorkFactor, error) {
 		return &BcryptWorkFactor{}, nil
 	case Scrypt:
 		return &ScryptWorkFactor{}, nil
+	case Argon2i, Argon2id:
+		return &Argon2WorkFactor{}, nil
 	default:
 		return nil, fmt.Errorf("Unsupported kdf: %v", kdf)
 	}
@@ -62,8 +79,8 @@ func NewWorkFactorForKdf(kdf Kdf) (WorkFactor, error) {
 
 // DefaultConfig is a safe default configuration for managing credentials
 var DefaultConfig = Config{
-	Kdf:         Scrypt,
-	WorkFactor:  DefaultWorkFactor[Scrypt],
+	Kdf:         Argon2id,
+	WorkFactor:  DefaultWorkFactor[Argon2id],
 	SaltSize:    16,
 	KeyLength:   32,
 	AuditLogger: &DummyAuditLogger{},    // It is recommended that you replace the dummy AuditLogger to actually audit your credentials
@@ -92,7 +109,7 @@ func getPasswordHash(kdf Kdf, workFactor WorkFactor, salt []byte, keyLength int,
 		case Pbkdf2Sha3_512:
 			return pbkdf2.Key([]byte(password), salt, wf.Iter, keyLength, sha3.New512), nil
 		default:
-			return []byte{}, errors.New("Pbkdf2WorkFactor can only be specified with the Pbkdf2 Kdf")
+			return []byte{}, errors.New("Pbkdf2WorkFactor can only be specified with the Pbkdf2 Kdfs")
 		}
 	case *BcryptWorkFactor:
 		if kdf != Bcrypt {
@@ -104,6 +121,15 @@ func getPasswordHash(kdf Kdf, workFactor WorkFactor, salt []byte, keyLength int,
 			return []byte{}, errors.New("ScryptWorkFactor can only be specified with the Scrypt Kdf")
 		}
 		return scrypt.Key([]byte(password), salt, wf.N, wf.R, wf.P, keyLength)
+	case *Argon2WorkFactor:
+		switch kdf {
+		case Argon2i:
+			return argon2.Key([]byte(password), salt, uint32(wf.T), uint32(wf.M), uint8(wf.P), uint32(keyLength)), nil
+		case Argon2id:
+			return argon2.IDKey([]byte(password), salt, uint32(wf.T), uint32(wf.M), uint8(wf.P), uint32(keyLength)), nil
+		default:
+			return []byte{}, errors.New("Argon2WorkFactor can only be specified with the Argon2 Kdfs")
+		}
 	default:
 		return []byte{}, fmt.Errorf("Unsupported WorkFactor: %T", wf)
 	}

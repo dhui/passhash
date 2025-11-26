@@ -51,6 +51,14 @@ func TestNewScrypt(t *testing.T) {
 	testNew(t, passhash.Scrypt)
 }
 
+func TestNewArgon2i(t *testing.T) {
+	testNew(t, passhash.Argon2i)
+}
+
+func TestNewArgon2id(t *testing.T) {
+	testNew(t, passhash.Argon2id)
+}
+
 func TestNewInvalidKdf(t *testing.T) {
 	userID := passhash.UserID(0)
 	config := passhash.Config{Kdf: passhash.Kdf(999999), WorkFactor: &passhash.Pbkdf2WorkFactor{}}
@@ -159,7 +167,7 @@ func TestMatchesPasswordWithIP(t *testing.T) {
 }
 
 func TestMatchesPasswordMatchNoUpdate(t *testing.T) {
-	origKdf := passhash.Scrypt
+	origKdf := passhash.Argon2id
 	origWorkFactor := passhash.DefaultWorkFactor[origKdf]
 	if origKdf != passhash.DefaultConfig.Kdf {
 		t.Errorf("Original credential is not the safe recommended Kdf. %v != %v", origKdf,
