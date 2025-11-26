@@ -27,6 +27,23 @@ type WorkFactor interface {
 	Unmarshal([]int) error
 }
 
+// cloneWorkFactor returns an independent copy of the provided WorkFactor
+func cloneWorkFactor(wf WorkFactor) (WorkFactor, error) {
+	switch v := wf.(type) {
+	case *Pbkdf2WorkFactor:
+		c := *v
+		return &c, nil
+	case *BcryptWorkFactor:
+		c := *v
+		return &c, nil
+	case *ScryptWorkFactor:
+		c := *v
+		return &c, nil
+	default:
+		return nil, fmt.Errorf("unsupported WorkFactor type: %T", wf)
+	}
+}
+
 // WorkFactorsEqual determines if 2 WorkFactors are equivalent
 func WorkFactorsEqual(a, b WorkFactor) bool {
 	if reflect.TypeOf(a) != reflect.TypeOf(b) {
@@ -135,5 +152,9 @@ func (c Config) NewCredential(userID UserID, password string) (*Credential, erro
 	if err != nil {
 		return nil, err
 	}
-	return &Credential{UserID: userID, Kdf: c.Kdf, WorkFactor: c.WorkFactor, Salt: salt, Hash: hash}, nil
+	wfCopy, err := cloneWorkFactor(c.WorkFactor)
+	if err != nil {
+		return nil, err
+	}
+	return &Credential{UserID: userID, Kdf: c.Kdf, WorkFactor: wfCopy, Salt: salt, Hash: hash}, nil
 }
