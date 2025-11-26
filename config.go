@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"slices"
 )
 
 var randReader = rand.Reader
@@ -39,15 +40,7 @@ func WorkFactorsEqual(a, b WorkFactor) bool {
 	if err != nil {
 		return false
 	}
-	if len(aM) != len(bM) {
-		return false
-	}
-	for i, aV := range aM {
-		if aV != bM[i] {
-			return false
-		}
-	}
-	return true
+	return slices.Equal(aM, bM)
 }
 
 // Pbkdf2WorkFactor specifies the work/cost parameters for PBKDF2
