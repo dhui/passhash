@@ -4,9 +4,9 @@ import (
 	_ "crypto/sha256"
 	_ "crypto/sha512"
 	"testing"
-)
 
-import (
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/dhui/passhash"
 )
 
@@ -180,7 +180,7 @@ func TestMatchesPasswordMatchNoUpdate(t *testing.T) {
 	if credential.Kdf != origKdf {
 		t.Errorf("Original credential Kdf changed. %v != %v", credential.Kdf, origKdf)
 	}
-	if credential.WorkFactor != origWorkFactor {
+	if !passhash.WorkFactorsEqual(credential.WorkFactor, origWorkFactor) {
 		t.Errorf("Original credential WorkFactor changed. %v != %v", credential.WorkFactor, origWorkFactor)
 	}
 
@@ -195,7 +195,7 @@ func TestMatchesPasswordMatchNoUpdate(t *testing.T) {
 		t.Errorf("Credential Kdf unexpectedly updated from safe recommended Kdf. %v != %v", credential.Kdf,
 			passhash.DefaultConfig.Kdf)
 	}
-	if credential.WorkFactor != passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf] {
+	if !passhash.WorkFactorsEqual(credential.WorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf]) {
 		t.Errorf("Credential WorkFactor unexpected updated from safe recommended Kdf WorkFactor. %v != %v",
 			credential.WorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf])
 	}
@@ -223,7 +223,7 @@ func TestMatchesPasswordUpdateKdfAndWorkFactor(t *testing.T) {
 	if credential.Kdf != origKdf {
 		t.Errorf("Original credential Kdf changed. %v != %v", credential.Kdf, origKdf)
 	}
-	if credential.WorkFactor != origWorkFactor {
+	if !passhash.WorkFactorsEqual(credential.WorkFactor, origWorkFactor) {
 		t.Errorf("Original credential WorkFactor changed. %v != %v", credential.WorkFactor, origWorkFactor)
 	}
 
@@ -238,7 +238,7 @@ func TestMatchesPasswordUpdateKdfAndWorkFactor(t *testing.T) {
 		t.Errorf("Updated credential Kdf did not update to safe recommended Kdf. %v != %v", credential.Kdf,
 			passhash.DefaultConfig.Kdf)
 	}
-	if credential.WorkFactor != passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf] {
+	if !passhash.WorkFactorsEqual(credential.WorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf]) {
 		t.Errorf("Updated credential WorkFactor did not update to safe recommended Kdf WorkFactor. %v != %v",
 			credential.WorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf])
 	}
@@ -278,9 +278,78 @@ func TestMatchesPasswordUpdateWorkFactor(t *testing.T) {
 	if credential.Kdf != kdf {
 		t.Errorf("Updated credential Kdf changed. %v != %v", credential.Kdf, kdf)
 	}
-	if credential.WorkFactor != passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf] {
+	if !passhash.WorkFactorsEqual(credential.WorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf]) {
 		t.Errorf("Updated credential WorkFactor did not update to safe recommended Kdf WorkFactor. %v != %v",
 			credential.WorkFactor, passhash.DefaultWorkFactor[passhash.DefaultConfig.Kdf])
+	}
+}
+
+func TestScryptWorkFactorMutationDoesNotBreakExistingCredential(t *testing.T) {
+	cfg := passhash.Config{
+		Kdf:         passhash.Scrypt,
+		WorkFactor:  &passhash.ScryptWorkFactor{N: 1024, R: 16, P: 1},
+		SaltSize:    16,
+		KeyLength:   32,
+		AuditLogger: &passhash.DummyAuditLogger{},
+		Store:       passhash.DummyCredentialStore{},
+	}
+	userID := passhash.UserID(1)
+
+	cred, err := cfg.NewCredential(userID, testPassword)
+	if err != nil {
+		t.Fatalf("Unable to create new Credential: %v", err)
+	}
+
+	if matched, _ := cred.MatchesPasswordWithConfig(cfg, testPassword); !matched {
+		t.Fatalf("Password did not match before work factor change")
+	}
+
+	wf := cfg.WorkFactor.(*passhash.ScryptWorkFactor)
+	wf.N *= 2
+
+	if matched, _ := cred.MatchesPasswordWithConfig(cfg, testPassword); !matched {
+		t.Fatalf("Password did not match after work factor change; credential should be stable")
+	}
+}
+
+func TestBcryptWorkFactorMutationTriggersUpgrade(t *testing.T) {
+	cfg := passhash.Config{
+		Kdf:         passhash.Bcrypt,
+		WorkFactor:  &passhash.BcryptWorkFactor{Cost: 10},
+		SaltSize:    16,
+		KeyLength:   32,
+		AuditLogger: &passhash.DummyAuditLogger{},
+		Store:       passhash.DummyCredentialStore{},
+	}
+	userID := passhash.UserID(2)
+
+	cred, err := cfg.NewCredential(userID, testPassword)
+	if err != nil {
+		t.Fatalf("Unable to create new Credential: %v", err)
+	}
+
+	beforeCost, err := bcrypt.Cost(cred.Hash)
+	if err != nil {
+		t.Fatalf("Unable to read bcrypt cost: %v", err)
+	}
+
+	wf := cfg.WorkFactor.(*passhash.BcryptWorkFactor)
+	wf.Cost = beforeCost + 2
+
+	matched, updated := cred.MatchesPasswordWithConfig(cfg, testPassword)
+	if !matched {
+		t.Fatalf("Password did not match after bcrypt work factor change")
+	}
+	if !updated {
+		t.Fatalf("Expected credential to be upgraded after bcrypt work factor change")
+	}
+
+	afterCost, err := bcrypt.Cost(cred.Hash)
+	if err != nil {
+		t.Fatalf("Unable to read bcrypt cost after upgrade: %v", err)
+	}
+	if afterCost <= beforeCost {
+		t.Fatalf("Expected bcrypt cost to increase, got before=%d after=%d", beforeCost, afterCost)
 	}
 }
 
