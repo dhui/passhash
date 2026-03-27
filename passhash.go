@@ -42,8 +42,8 @@ var DefaultWorkFactor = map[Kdf]WorkFactor{
 	// Scrypt - n >= 16384, p = 1, r = 16 (output length = 32)
 	// https://crypto.stackexchange.com/questions/35423/appropriate-scrypt-parameters-when-generating-an-scrypt-hash
 	// https://download.libsodium.org/doc/password_hashing/scrypt.html
-	// Scrypt: ScryptWorkFactor{N: 65_536, R: 16, P: 1},
-	Scrypt: &ScryptWorkFactor{N: 32_768, R: 16, P: 1},
+	// https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#scrypt
+	Scrypt: &ScryptWorkFactor{N: 65_536, R: 8, P: 2},
 }
 
 // NewWorkFactorForKdf returns an empty new WorkFactor for the given kdf
