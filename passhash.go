@@ -33,17 +33,17 @@ const (
 // Use NewWorkFactorForKdf() instead.
 // TODO: Determine/tune DefaultWorkFactor (aim for 150+ms hash time on API server hardware)
 var DefaultWorkFactor = map[Kdf]WorkFactor{
-	Pbkdf2Sha256:   &Pbkdf2WorkFactor{Iter: 100000},
-	Pbkdf2Sha512:   &Pbkdf2WorkFactor{Iter: 100000},
-	Pbkdf2Sha3_256: &Pbkdf2WorkFactor{Iter: 100000},
-	Pbkdf2Sha3_512: &Pbkdf2WorkFactor{Iter: 100000},
+	Pbkdf2Sha256:   &Pbkdf2WorkFactor{Iter: 600_000},
+	Pbkdf2Sha512:   &Pbkdf2WorkFactor{Iter: 220_000},
+	Pbkdf2Sha3_256: &Pbkdf2WorkFactor{Iter: 100_000},
+	Pbkdf2Sha3_512: &Pbkdf2WorkFactor{Iter: 100_000},
 	Bcrypt:         &BcryptWorkFactor{Cost: 12}, // bcrypt.DefaultCost is 10 as of 2017-07-26
 
 	// Scrypt - n >= 16384, p = 1, r = 16 (output length = 32)
 	// https://crypto.stackexchange.com/questions/35423/appropriate-scrypt-parameters-when-generating-an-scrypt-hash
 	// https://download.libsodium.org/doc/password_hashing/scrypt.html
-	// Scrypt: ScryptWorkFactor{N: 65536, R: 16, P: 1},
-	Scrypt: &ScryptWorkFactor{N: 32768, R: 16, P: 1},
+	// Scrypt: ScryptWorkFactor{N: 65_536, R: 16, P: 1},
+	Scrypt: &ScryptWorkFactor{N: 32_768, R: 16, P: 1},
 }
 
 // NewWorkFactorForKdf returns an empty new WorkFactor for the given kdf
